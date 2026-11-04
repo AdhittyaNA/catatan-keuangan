@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Catatan Keuangan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f5f7fb;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --muted: #748096;
+      --line: #e8ecf3;
+      --green: #17865c;
+      --red: #d34b55;
+      --blue: #4268dc;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; }
+    button, input, select { font: inherit; }
+    [hidden] { display: none !important; }
+    .page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 38px 0 56px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 30px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      display: grid; width: 44px; height: 44px; place-items: center; border-radius: 14px;
+      color: white; background: #243f84; font-size: 21px; font-weight: 800;
+    }
+    h1 { margin: 0; font-size: 22px; letter-spacing: -.5px; }
+    .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .today { color: var(--muted); font-size: 13px; }
+    .section-heading { margin: 0 0 14px; font-size: 15px; font-weight: 700; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 28px; }
+    .card, .panel { background: white; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 5px 18px #28375a08; }
+    .card { min-height: 132px; padding: 20px; }
+    .card-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; }
+    .icon {
+      display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px;
+      background: #edf2ff; color: var(--blue); font-size: 17px; font-weight: 700;
+    }
+    .icon.income { color: var(--green); background: #eaf7f0; }
+    .icon.expense { color: var(--red); background: #fff0f0; }
+    .amount { margin: 12px 0 0; font-size: clamp(20px, 3vw, 26px); font-weight: 750; letter-spacing: -.7px; }
+    .amount.balance { color: #243f84; }
+    .content { display: grid; grid-template-columns: minmax(280px, 350px) minmax(0, 1fr); gap: 18px; align-items: start; }
+    .panel { padding: 22px; }
+    .panel h2 { margin: 0 0 20px; font-size: 16px; }
+    .field { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 7px; color: #4c586c; font-size: 12px; font-weight: 650; }
+    input, select {
+      width: 100%; height: 42px; padding: 0 12px; border: 1px solid #dfe4ed;
+      border-radius: 9px; color: #172033; background: white; outline: none;
+    }
+    input:focus, select:focus { border-color: #7793ec; box-shadow: 0 0 0 3px #4268dc19; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .primary {
+      width: 100%; min-height: 43px; border: 0; border-radius: 9px; color: white; background: #294b9a;
+      font-weight: 700; cursor: pointer; transition: background .15s, transform .15s;
+    }
+    .primary:hover { background: #203d81; }
+    .primary:active { transform: translateY(1px); }
+    .message { min-height: 18px; margin: 10px 0 0; color: var(--red); font-size: 12px; }
+    .list-panel { min-width: 0; padding: 22px 0 0; overflow: hidden; }
+    .list-header { display: flex; justify-content: space-between; align-items: center; padding: 0 22px 16px; gap: 12px; }
+    .list-header h2 { margin: 0; font-size: 16px; }
+    .count { color: var(--muted); font-size: 12px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 11px 16px; background: #f9faff; color: var(--muted); font-size: 11px; font-weight: 650; white-space: nowrap; }
+    td { padding: 14px 16px; border-top: 1px solid #eef0f5; font-size: 12px; white-space: nowrap; }
+    td:first-child, th:first-child { padding-left: 22px; }
+    td:last-child, th:last-child { padding-right: 22px; }
+    .transaction-name { color: #243047; font-weight: 650; }
+    .transaction-detail { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .type-pill { display: inline-block; padding: 5px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .type-pill.income { color: var(--green); background: #eaf7f0; }
+    .type-pill.expense { color: var(--red); background: #fff0f0; }
+    .money.income { color: var(--green); font-weight: 700; }
+    .money.expense { color: var(--red); font-weight: 700; }
+    .delete {
+      border: 0; padding: 5px 7px; border-radius: 6px; background: transparent; color: #8892a3;
+      cursor: pointer; font-size: 11px;
+    }
+    .delete:hover { background: #fff0f0; color: var(--red); }
+    .empty { padding: 38px 18px; color: var(--muted); text-align: center; font-size: 13px; }
+    .footnote { margin: 16px 0 0; color: #8993a3; text-align: center; font-size: 11px; }
+    .login-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
+    .login-card { width: min(100%, 410px); padding: 28px; }
+    .login-card h1 { margin-top: 20px; font-size: 22px; }
+    .login-card .brand-mark { width: 48px; height: 48px; }
+    .demo-warning {
+      margin: 20px 0; padding: 12px; border: 1px solid #f1d599; border-radius: 9px;
+      color: #6a4b0d; background: #fff8e6; font-size: 12px; line-height: 1.55;
+    }
+    .login-switch { margin: 16px 0 0; color: var(--muted); text-align: center; font-size: 12px; }
+    .text-button { padding: 0; border: 0; color: var(--blue); background: transparent; font-weight: 700; cursor: pointer; }
+    .account-actions { display: flex; align-items: center; gap: 12px; }
+    .demo-badge { padding: 6px 9px; border-radius: 20px; color: #8a5b08; background: #fff2cc; font-size: 11px; font-weight: 700; }
+    .logout {
+      padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px;
+      color: #4c586c; background: white; cursor: pointer; font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 28px, 560px); padding-top: 25px; }
+      .summary { grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
+      .card { min-height: auto; padding: 15px 17px; }
+      .amount { margin-top: 8px; font-size: 22px; }
+      .content { grid-template-columns: 1fr; }
+      .panel { padding: 19px; }
+      .list-panel { padding: 19px 0 0; }
+      .today { display: none; }
+      .login-card { padding: 22px; }
+      .account-actions { gap: 7px; }
+      .demo-badge { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-page" id="login-screen">
+    <section class="panel login-card" aria-labelledby="login-heading">
+      <div class="brand-mark" aria-hidden="true">₊</div>
+      <h1 id="login-heading">Masuk ke Catatan Keuangan</h1>
+      <p class="subtitle" id="login-subtitle">Masuk ke akun demo untuk melihat pencatatan keuangan.</p>
+      <div class="demo-warning">
+        <strong>Mode demo, bukan login sungguhan.</strong> Form ini tidak membuat atau memeriksa akun.
+        Email dan kata sandi apa pun hanya dipakai sementara di halaman ini dan tidak disimpan.
+        Jangan masukkan kata sandi asli. Siapa pun dapat melewati demo ini; data transaksi tidak terlindungi.
+      </div>
+      <form id="login-form">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required>
+        </div>
+        <div class="field">
+          <label for="login-password">Kata sandi (demo)</label>
+          <input id="login-password" name="password" type="password" autocomplete="off" placeholder="Kata sandi apa saja" required>
+        </div>
+        <button class="primary" id="login-submit" type="submit">Masuk (demo)</button>
+        <p class="message" id="login-message" role="status" aria-live="polite"></p>
+      </form>
+      <p class="login-switch">
+        <span id="login-switch-text">Belum punya akun?</span>
+        <button class="text-button" id="login-switch" type="button">Daftar demo</button>
+      </p>
+    </section>
+  </main>
+
+  <main class="page" id="app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">₊</div>
+        <div>
+          <h1>Catatan Keuangan</h1>
+          <p class="subtitle">Kelola uang masuk dan keluar dengan mudah</p>
+        </div>
+      </div>
+      <div class="account-actions">
+        <span class="demo-badge">Akun demo</span>
+        <time class="today" id="today"></time>
+        <button class="logout" id="logout" type="button">Keluar</button>
+      </div>
+    </header>
+
+    <section aria-labelledby="summary-heading">
+      <h2 class="section-heading" id="summary-heading">Ringkasan keuangan</h2>
+      <div class="summary">
+        <article class="card">
+          <div class="card-top"><span>Saldo akhir</span><span class="icon">＝</span></div>
+          <p class="amount balance" id="balance">Rp0</p>
+        </article>
+        <article class="card">
+          <div class="card-top"><span>Total uang masuk</span><span class="icon income">↙</span></div>
+          <p class="amount" id="total-income">Rp0</p>
+        </article>
+        <article class="card">
+          <div class="card-top"><span>Total uang keluar</span><span class="icon expense">↗</span></div>
+          <p class="amount" id="total-expense">Rp0</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="content">
+      <section class="panel" aria-labelledby="form-heading">
+        <h2 id="form-heading">Tambah transaksi</h2>
+        <form id="transaction-form">
+          <div class="field">
+            <label for="type">Jenis transaksi</label>
+            <select id="type" name="type">
+              <option value="income">Uang masuk / Penghasilan</option>
+              <option value="expense">Uang keluar / Pengeluaran</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="description">Keterangan</label>
+            <input id="description" name="description" type="text" maxlength="80" placeholder="Contoh: Gaji bulanan" required>
+          </div>
+          <div class="field">
+            <label for="amount">Jumlah (Rp)</label>
+            <input id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 500000" required>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="category">Kategori</label>
+              <select id="category" name="category">
+                <option>Umum</option>
+                <option>Gaji</option>
+                <option>Makanan</option>
+                <option>Transportasi</option>
+                <option>Tagihan</option>
+                <option>Belanja</option>
+                <option>Tabungan</option>
+                <option>Lainnya</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="date">Tanggal</label>
+              <input id="date" name="date" type="date" required>
+            </div>
+          </div>
+          <button class="primary" type="submit">+ Simpan transaksi</button>
+          <p class="message" id="message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel list-panel" aria-labelledby="history-heading">
+        <div class="list-header">
+          <h2 id="history-heading">Riwayat transaksi</h2>
+          <span class="count" id="count">0 transaksi</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Transaksi</th><th>Tanggal</th><th>Jenis</th><th>Jumlah</th><th></th></tr>
+            </thead>
+            <tbody id="transactions"></tbody>
+          </table>
+          <div class="empty" id="empty">Belum ada transaksi. Tambahkan transaksi pertamamu.</div>
+        </div>
+      </section>
+    </div>
+    <p class="footnote">Data transaksi tersimpan bersama di browser ini. Mode demo tidak mengisolasi akun atau melindungi data.</p>
+  </main>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "catatan-keuangan-transactions-v1";
+      const rupiah = new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+      });
+      const form = document.getElementById("transaction-form");
+      const message = document.getElementById("message");
+      const rows = document.getElementById("transactions");
+      const loginForm = document.getElementById("login-form");
+      const loginScreen = document.getElementById("login-screen");
+      const app = document.getElementById("app");
+      const loginMessage = document.getElementById("login-message");
+      const loginSwitch = document.getElementById("login-switch");
+      let isRegisterMode = false;
+      const today = new Date();
+      const localDate = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+      ].join("-");
+      document.getElementById("date").value = localDate;
+      document.getElementById("today").textContent = new Intl.DateTimeFormat("id-ID", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric"
+      }).format(today);
+
+      loginSwitch.addEventListener("click", () => {
+        isRegisterMode = !isRegisterMode;
+        document.getElementById("login-heading").textContent = isRegisterMode
+          ? "Buat akun demo"
+          : "Masuk ke Catatan Keuangan";
+        document.getElementById("login-subtitle").textContent = isRegisterMode
+          ? "Formulir ini hanya simulasi dan tidak membuat akun."
+          : "Masuk ke akun demo untuk melihat pencatatan keuangan.";
+        document.getElementById("login-submit").textContent = isRegisterMode
+          ? "Daftar (demo)"
+          : "Masuk (demo)";
+        document.getElementById("login-switch-text").textContent = isRegisterMode
+          ? "Sudah punya akun?"
+          : "Belum punya akun?";
+        loginSwitch.textContent = isRegisterMode ? "Masuk demo" : "Daftar demo";
+        loginMessage.textContent = "";
+      });
+
+      loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        loginScreen.hidden = true;
+        app.hidden = false;
+        loginForm.reset();
+        loginMessage.textContent = "";
+        render();
+      });
+
+      document.getElementById("logout").addEventListener("click", () => {
+        app.hidden = true;
+        loginScreen.hidden = false;
+      });
+
+      let transactions = [];
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved !== null) {
+          const parsed = JSON.parse(saved);
+          if (!Array.isArray(parsed)) throw new Error("Format data transaksi tidak valid.");
+          transactions = parsed.filter((item) =>
+            item && typeof item.id === "string" &&
+            (item.type === "income" || item.type === "expense") &&
+            typeof item.description === "string" &&
+            Number.isFinite(item.amount) && item.amount > 0 &&
+            typeof item.category === "string" && typeof item.date === "string"
+          );
+        }
+      } catch (error) {
+        message.textContent = "Data tersimpan tidak dapat dibaca: " + error.message;
+      }
+
+      function saveTransactions() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+          message.textContent = "";
+          return true;
+        } catch (error) {
+          message.textContent = "Gagal menyimpan data di browser: " + error.message;
+          return false;
+        }
+      }
+
+      function formatDate(date) {
+        const parts = date.split("-").map(Number);
+        if (parts.length !== 3 || parts.some((part) => !Number.isInteger(part))) return date;
+        return new Intl.DateTimeFormat("id-ID", {
+          day: "numeric", month: "short", year: "numeric"
+        }).format(new Date(parts[0], parts[1] - 1, parts[2]));
+      }
+
+      function render() {
+        const income = transactions
+          .filter((item) => item.type === "income")
+          .reduce((total, item) => total + item.amount, 0);
+        const expense = transactions
+          .filter((item) => item.type === "expense")
+          .reduce((total, item) => total + item.amount, 0);
+        document.getElementById("balance").textContent = rupiah.format(income - expense);
+        document.getElementById("total-income").textContent = rupiah.format(income);
+        document.getElementById("total-expense").textContent = rupiah.format(expense);
+        document.getElementById("count").textContent = transactions.length + " transaksi";
+        rows.replaceChildren();
+        document.getElementById("empty").hidden = transactions.length !== 0;
+
+        const sorted = [...transactions].sort((a, b) =>
+          b.date.localeCompare(a.date) || b.id.localeCompare(a.id)
+        );
+        for (const transaction of sorted) {
+          const row = document.createElement("tr");
+          const nameCell = document.createElement("td");
+          const name = document.createElement("span");
+          name.className = "transaction-name";
+          name.textContent = transaction.description;
+          const detail = document.createElement("span");
+          detail.className = "transaction-detail";
+          detail.textContent = transaction.category;
+          nameCell.append(name, detail);
+
+          const dateCell = document.createElement("td");
+          dateCell.textContent = formatDate(transaction.date);
+          const typeCell = document.createElement("td");
+          const type = document.createElement("span");
+          type.className = "type-pill " + transaction.type;
+          type.textContent = transaction.type === "income" ? "Masuk" : "Keluar";
+          typeCell.append(type);
+          const amountCell = document.createElement("td");
+          amountCell.className = "money " + transaction.type;
+          amountCell.textContent = (transaction.type === "income" ? "+" : "−") + " " + rupiah.format(transaction.amount);
+
+          const actionCell = document.createElement("td");
+          const remove = document.createElement("button");
+          remove.className = "delete";
+          remove.type = "button";
+          remove.textContent = "Hapus";
+          remove.setAttribute("aria-label", "Hapus transaksi " + transaction.description);
+          remove.addEventListener("click", () => {
+            transactions = transactions.filter((item) => item.id !== transaction.id);
+            if (saveTransactions()) render();
+          });
+          actionCell.append(remove);
+          row.append(nameCell, dateCell, typeCell, amountCell, actionCell);
+          rows.append(row);
+        }
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const amount = Number(data.get("amount"));
+        const description = String(data.get("description")).trim();
+        if (!description || !Number.isSafeInteger(amount) || amount <= 0) {
+          message.textContent = "Isi keterangan dan jumlah rupiah yang valid (minimal Rp1).";
+          return;
+        }
+        transactions.push({
+          id: globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+            ? globalThis.crypto.randomUUID()
+            : String(Date.now()) + "-" + Math.random().toString(16).slice(2),
+          type: String(data.get("type")),
+          description,
+          amount,
+          category: String(data.get("category")),
+          date: String(data.get("date"))
+        });
+        if (saveTransactions()) {
+          form.reset();
+          document.getElementById("date").value = localDate;
+          render();
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
